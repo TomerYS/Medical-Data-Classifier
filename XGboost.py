@@ -1,4 +1,5 @@
 import pandas as pd
+import datetime
 import numpy as np
 import xgboost as xgb
 from sklearn.model_selection import train_test_split
@@ -10,6 +11,7 @@ from sklearn.pipeline import make_pipeline
 import matplotlib.pyplot as plt
 import logging
 import pickle
+import os
 from sklearn.metrics import (roc_auc_score, accuracy_score, precision_score, 
                              recall_score, f1_score, log_loss, confusion_matrix, 
                              matthews_corrcoef, balanced_accuracy_score,
@@ -19,8 +21,8 @@ from sklearn.metrics import (roc_auc_score, accuracy_score, precision_score,
 # Setup logging
 logging.basicConfig(filename='XGBoost_Log.log', filemode='a', format='%(asctime)s - %(message)s', level=logging.INFO)
 logging.info('____________________________________________________________________________________________________________________')
-logging.info('Description of changes in the model: learning_rate=0.01')
 logging.info('XGBoost_model')
+logging.info('Description of changes in the model:.....')
 
 personal_info_train = pd.read_csv('personal_info_train.csv')
 measurements_train = pd.read_csv('measurements_results_train.csv')
@@ -48,6 +50,7 @@ gender_map = {'M': 0, 'F': 1}
 train['gender'] = train['gender'].map(gender_map)
 test['gender'] = test['gender'].map(gender_map)
 
+# height and weight columns have some values that are too high or too low to be realistic
 for df in [train, test]:
     df.loc[df['height'] < 10, 'height'] = df.loc[df['height'] < 10, 'height'] * 100
 
@@ -63,8 +66,7 @@ for df in [train, test]:
     mask = df['bmi'] < 10
     df.loc[mask,'bmi'] = df.loc[mask,'weight'] / (df.loc[mask,'height']/100)**2
 
-
-# If the BMI is still missing after this calculation, we can fill with the median as before
+# If the BMI is still missing after this calculation, we can fill with the median
 imputer = SimpleImputer(strategy='median')
 train[['bmi']] = imputer.fit_transform(train[['bmi']])
 test[['bmi']] = imputer.transform(test[['bmi']])
@@ -84,14 +86,14 @@ test.drop(['country'], axis=1, inplace=True)
 train.drop(['region'], axis=1, inplace=True)
 test.drop(['region'], axis=1, inplace=True)
 
-# Create a SimpleImputer object with strategy as 'most_frequent'. Replace missing values with "Missing"
+# Create a SimpleImputer object with strategy as 'most_frequent'. Replace missing values with "NaN"
 frequent_imputer = SimpleImputer(strategy='most_frequent')
 train['HMO'].fillna('NaN', inplace=True)
 test['HMO'].fillna('NaN', inplace=True)
-train['city'].fillna('Missing', inplace=True)
-test['city'].fillna('Missing', inplace=True)
-train['employment'].fillna('0', inplace=True)
-test['employment'].fillna('0', inplace=True)
+train['city'].fillna('NaN', inplace=True)
+test['city'].fillna('NaN', inplace=True)
+train['employment'].fillna('NaN', inplace=True)
+test['employment'].fillna('NaN', inplace=True)
 
 # Convert dates to datetime format and extract year, month, and day
 train['created_at'] = pd.to_datetime(train['created_at'])
@@ -107,10 +109,11 @@ test['created_day'] = test['created_at'].dt.day
 test.drop('created_at', axis=1, inplace=True)
 test['birth_date'] = pd.to_datetime(test['birth_date'])
 
-# Create a new feature for age (in years) from the birth_date and drop birth_date
-train['age'] = (pd.to_datetime('today') - train['birth_date']).dt.days // 365
+# Create a new feature for age (in years and fraction of year) from the birth_date and drop birth_date
+now = pd.to_datetime('today')
+train['age'] = (now.year - train['birth_date'].dt.year) + ((now.month - train['birth_date'].dt.month) / 12.0)
 train.drop('birth_date', axis=1, inplace=True)
-test['age'] = (pd.to_datetime('today') - test['birth_date']).dt.days // 365
+test['age'] = (now.year - test['birth_date'].dt.year) + ((now.month - test['birth_date'].dt.month) / 12.0)
 test.drop('birth_date', axis=1, inplace=True)
 
 # Separate target variable 'label' from the training data
@@ -143,28 +146,12 @@ preprocessor = make_column_transformer(
 pipeline = make_pipeline(
     preprocessor,
     XGBClassifier(n_jobs=-1, learning_rate=0.008, n_estimators=1500, max_depth=14, min_child_weight=5, gamma=0.1, subsample=0.8, colsample_bytree=0.8, reg_lambda=1.0, reg_alpha=1.0)
-    #XGBClassifier(n_jobs=-1)
 )
 print('Pipeline created successfully')
 
 # Split the training data into training and validation set
 X_train, X_val, y_train, y_val = train_test_split(train, target, test_size=0.2)
 print('Data split successfully')
-
-# First, fit the pipeline
-pipeline.fit(X_train, y_train)
-
-# After fitting, you can use named_steps to get the steps in the pipeline
-preprocessor = pipeline.named_steps['columntransformer']
-
-# Now you can get the transformed column names
-transformed_columns = preprocessor.get_feature_names_out(input_features=train.columns)
-
-# print each feature name
-for i, feature_name in enumerate(transformed_columns):
-    print(f"f{i}: {feature_name}")
-
-
 
 print('Fitting model...')
 pipeline.fit(X_train, y_train)
@@ -212,8 +199,6 @@ feature_names = ['gender', 'HMO', 'height', 'bmi', 'heart_rate', 'steps_day_1', 
                  'steps_day_2_flag', 'test_2_flag', 'test_6_flag', 'test_8_flag', 'test_10_flag', 'test_12_flag', 
                  'test_15_flag', 'created_year', 'created_month', 'created_day', 'age']
 
-
-
 # Predict probabilities for the actual test data
 print('Making predictions on test data...')
 test_preds = pipeline.predict_proba(test)[:, 1]
@@ -228,9 +213,9 @@ feature_importance = dict(zip(feature_names, importance))
 sorted_feature_importance = dict(sorted(feature_importance.items(), key=lambda item: item[1]))
 
 # Creating barh plot
-plt.figure(figsize=(10, 6))  # Increase the size of the figure
+plt.figure(figsize=(30, 30))
 plt.barh(range(len(sorted_feature_importance)), list(sorted_feature_importance.values()), color='skyblue')
-plt.yticks(range(len(sorted_feature_importance)), list(sorted_feature_importance.keys())) # Add feature names as y-axis labels
+plt.yticks(range(len(sorted_feature_importance)), list(sorted_feature_importance.keys()))
 plt.xlabel('Importance')
 plt.ylabel('Features')
 plt.title('Feature Importance')
@@ -240,8 +225,6 @@ print("Feature importance plotted successfully")
 
 # calculate the confusion matrix
 cm = confusion_matrix(y_val, y_val_pred)
-
-cm = confusion_matrix(y_val, y_val_pred)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm)
 disp.plot()
 plt.xlabel('Predicted')
@@ -250,10 +233,8 @@ plt.title('Confusion Matrix')
 plt.show()
 print("Confusion matrix plotted successfully")
 
-
 # Use the model to get the target scores:
-y_val_scores = pipeline.predict_proba(X_val)[:, 1]  # Get the scores for the positive class
-
+y_val_scores = pipeline.predict_proba(X_val)[:, 1]
 roc_display = RocCurveDisplay.from_estimator(pipeline, X_val, y_val)
 roc_display.plot()
 plt.title('ROC Curve')
@@ -269,16 +250,33 @@ submission = pd.DataFrame({
     'prediction': test_preds
 })
 
+# Get the current date and time
+now = datetime.datetime.now()
+timestamp_str = now.strftime("%Y%m%d_%H%M%S")
+
+# Specify the directories
+submission_dir = "Submission Files"
+model_dir = "Models"
+
+# Use the timestamp string in the filenames
+submission_filename = os.path.join(submission_dir, f'mysubmission-XGBoost-{timestamp_str}.csv')
+model_filename = os.path.join(model_dir, f"XGBoost_model-{timestamp_str}.pickle")
+
+# Check if directories exist, if not, create them
+os.makedirs(submission_dir, exist_ok=True)
+os.makedirs(model_dir, exist_ok=True)
+
 # Save the submission dataframe to a csv file without row index
-submission.to_csv('mysubmission-XGBoost(3).csv', index=False)
-print('Submission saved successfully')
+submission.to_csv(submission_filename, index=False)
+print(f'Submission saved to {submission_filename}')
 
 # Save model to file
-pickle.dump(pipeline, open("XGBoost_model.pickle(3)", "wb"))
-print('Model saved successfully')
-logging.info('Model saved successfully')
+pickle.dump(pipeline, open(model_filename, "wb"))
+print(f'Model saved to {model_filename}')
+logging.info(f'Model saved to {model_filename}')
 
-xgb.plot_tree(pipeline['xgbclassifier'], num_trees=2, fmap="XGBoost_model(3).pickle")
+# Plot the first decision tree
+xgb.plot_tree(pipeline['xgbclassifier'], num_trees=2, fmap=model_filename)
 plt.title("XGBoost Decision Tree")
 plt.show()
 
