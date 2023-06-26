@@ -5,13 +5,11 @@ from sklearn.model_selection import train_test_split
 from xgboost import XGBClassifier
 from sklearn.preprocessing import OneHotEncoder, LabelEncoder
 from sklearn.impute import SimpleImputer
-from sklearn.impute import KNNImputer
 from sklearn.compose import make_column_transformer
 from sklearn.pipeline import make_pipeline
 import matplotlib.pyplot as plt
 import logging
 import pickle
-from imblearn.over_sampling import SMOTE
 from sklearn.metrics import (roc_auc_score, accuracy_score, precision_score, 
                              recall_score, f1_score, log_loss, confusion_matrix, 
                              matthews_corrcoef, balanced_accuracy_score,
@@ -19,10 +17,10 @@ from sklearn.metrics import (roc_auc_score, accuracy_score, precision_score,
 
 
 # Setup logging
-logging.basicConfig(filename='XGBoost3.5_Log.log', filemode='a', format='%(asctime)s - %(message)s', level=logging.INFO)
+logging.basicConfig(filename='XGBoost_Log.log', filemode='a', format='%(asctime)s - %(message)s', level=logging.INFO)
 logging.info('____________________________________________________________________________________________________________________')
 logging.info('Description of changes in the model: learning_rate=0.01')
-logging.info('XGBoost_model3.5_without_SMOTE(13)')
+logging.info('XGBoost_model')
 
 personal_info_train = pd.read_csv('personal_info_train.csv')
 measurements_train = pd.read_csv('measurements_results_train.csv')
@@ -58,16 +56,12 @@ for df in [train, test]:
 
 # Calculate BMI where possible
 for df in [train, test]:
-    #mask = df['bmi'].isna() & df['weight'].notna() & df['height'].notna()
-    #df.loc[mask, 'bmi'] = df.loc[mask, 'weight'] / (df.loc[mask, 'height'] / 100.0)**2
     mask = df['bmi'] > 80
     df.loc[mask,'bmi'] = df.loc[mask,'weight'] / (df.loc[mask,'height']**2)
 
 
-# If the BMI is still missing after this calculation, we can fill with the mean as before
-knn_imputer = KNNImputer(n_neighbors=3)
+# If the BMI is still missing after this calculation, we can fill with the median as before
 imputer = SimpleImputer(strategy='median')
-#mean_imputer = SimpleImputer(strategy='mean')
 train[['bmi']] = imputer.fit_transform(train[['bmi']])
 test[['bmi']] = imputer.transform(test[['bmi']])
 
@@ -77,7 +71,6 @@ for col in columns_to_check:
     train[col + '_flag'] = np.where(train[col].isna(), 0, 1)
     test[col + '_flag'] = np.where(test[col].isna(), 0, 1)
 
-#mean_imputer = SimpleImputer(strategy='mean')
 train[columns_to_check] = imputer.fit_transform(train[columns_to_check])
 test[columns_to_check] = imputer.transform(test[columns_to_check])
 
@@ -145,8 +138,8 @@ preprocessor = make_column_transformer(
 # Create a pipeline with our preprocessor and XGBoost classifier
 pipeline = make_pipeline(
     preprocessor,
-    #XGBClassifier(n_jobs=-1, learning_rate=0.008, n_estimators=1500, max_depth=14, min_child_weight=5, gamma=0.1, subsample=0.8, colsample_bytree=0.8, reg_lambda=1.0, reg_alpha=1.0)
-    XGBClassifier(n_jobs=-1)
+    XGBClassifier(n_jobs=-1, learning_rate=0.008, n_estimators=1500, max_depth=14, min_child_weight=5, gamma=0.1, subsample=0.8, colsample_bytree=0.8, reg_lambda=1.0, reg_alpha=1.0)
+    #XGBClassifier(n_jobs=-1)
 )
 print('Pipeline created successfully')
 
@@ -169,8 +162,7 @@ for i, feature_name in enumerate(transformed_columns):
 
 
 
-# Fit the model to the training data and evaluate without SMOTE
-print('Fitting model without SMOTE...')
+print('Fitting model...')
 pipeline.fit(X_train, y_train)
 print('Model fitted successfully')
 
@@ -187,8 +179,8 @@ val_score = roc_auc_score(y_val, val_preds)
 print('AUC calculated successfully')
 
 # Print AUC scores
-print(f'Train AUC xgboost3.5 without SMOTE: {train_score}')
-print(f'Validation AUC without SMOTE: {val_score}')
+print(f'Train AUC xgboost: {train_score}')
+print(f'Validation AUC: {val_score}')
 
 # Predict classes for the validation set
 print('Predicting classes...')
@@ -196,8 +188,8 @@ y_val_pred = pipeline.predict(X_val)
 print('Predictions made successfully')
 
 # Log additional metrics without SMOTE
-logging.info('Metrics for XGBoost3.5 without SMOTE:')
-logging.info(f'Train AUC xgboost3.5: {train_score}')
+logging.info('Metrics for XGBoost:')
+logging.info(f'Train AUC: {train_score}')
 logging.info(f'Validation AUC: {val_score}')
 logging.info(f'Accuracy: {accuracy_score(y_val, y_val_pred)}')
 logging.info(f'Precision: {precision_score(y_val, y_val_pred)}')
@@ -265,8 +257,8 @@ plt.xlabel('False Positive Rate')
 plt.ylabel('True Positive Rate')
 plt.show()
 print("ROC plotted successfully")
-
 print("finished displaying graphs")
+
 # Create a submission dataframe with patient_id and predicted probabilities
 submission = pd.DataFrame({
     'patient_id': test_ids,
@@ -274,120 +266,15 @@ submission = pd.DataFrame({
 })
 
 # Save the submission dataframe to a csv file without row index
-submission.to_csv('mysubmission-XGBoost3.5_without_SMOTE(13).csv', index=False)
+submission.to_csv('mysubmission-XGBoost(3).csv', index=False)
 print('Submission saved successfully')
 
 # Save model to file
-pickle.dump(pipeline, open("XGBoost_model3.5_without_SMOTE(13).pickle", "wb"))
+pickle.dump(pipeline, open("XGBoost_model.pickle(3)", "wb"))
 print('Model saved successfully')
+logging.info('Model saved successfully')
 
-xgb.plot_tree(pipeline['xgbclassifier'], num_trees=2, fmap="XGBoost_model3.5_without_SMOTE(13).pickle")
+xgb.plot_tree(pipeline['xgbclassifier'], num_trees=2, fmap="XGBoost_model(3).pickle")
 plt.title("XGBoost Decision Tree")
 plt.show()
 
-logging.info('Model saved successfully')
-logging.info("Submission file created without SMOTE")
-
-
-# #################################################
-
-# # Applying SMOTE
-# print('Applying SMOTE...')
-# smote = SMOTE(random_state=42)
-# X_train_smote, y_train_smote = smote.fit_resample(X_train, y_train)
-# print('Successfully applied SMOTE to the training data.')
-
-# # Fit the model to the SMOTE training data and evaluate with SMOTE
-# print('Fitting model with SMOTE...')
-# pipeline.fit(X_train_smote, y_train_smote)
-# print('Model fitted successfully')
-
-# # Predict probabilities for the training and validation set with SMOTE
-# print('Making predictions with SMOTE...')
-# train_smote_preds = pipeline.predict_proba(X_train_smote)[:, 1]
-# val_smote_preds = pipeline.predict_proba(X_val)[:, 1]
-# print('Predictions made successfully')
-
-# # Calculate the AUC for the training and validation set with SMOTE
-# print('Calculating AUC with SMOTE...')
-# train_smote_score = roc_auc_score(y_train_smote, train_smote_preds)
-# val_smote_score = roc_auc_score(y_val, val_smote_preds)
-# print('AUC calculated successfully')
-
-# # Print AUC scores with SMOTE
-# print(f'Train AUC xgboost3.5 with SMOTE: {train_smote_score}')
-# print(f'Validation AUC with SMOTE: {val_smote_score}')
-
-# # Predict classes for the validation set with SMOTE
-# print('Predicting classes with SMOTE...')
-# y_val_smote_pred = pipeline.predict(X_val)
-# print('Predictions made successfully')
-
-# # Log additional metrics with SMOTE
-# logging.info('Metrics for XGBoost3.5 with SMOTE:')
-# logging.info(f'Train AUC xgboost3.5: {train_smote_score}')
-# logging.info(f'Validation AUC: {val_smote_score}')
-# logging.info(f'Accuracy: {accuracy_score(y_val, y_val_smote_pred)}')
-# logging.info(f'Precision: {precision_score(y_val, y_val_smote_pred)}')
-# logging.info(f'Recall: {recall_score(y_val, y_val_smote_pred)}')
-# logging.info(f'F1-Score: {f1_score(y_val, y_val_smote_pred)}')
-# logging.info(f'Log-Loss: {log_loss(y_val, val_smote_preds)}')
-# logging.info(f'MCC: {matthews_corrcoef(y_val, y_val_smote_pred)}')
-# logging.info(f'Balanced Accuracy: {balanced_accuracy_score(y_val, y_val_smote_pred)}')
-# logging.info(f'Confusion Matrix: \n {confusion_matrix(y_val, y_val_smote_pred)}')
-
-# cm = confusion_matrix(y_val, y_val_smote_pred)
-# disp = ConfusionMatrixDisplay(confusion_matrix=cm)
-# disp.plot()
-# plt.title('Confusion Matrix with SMOTE')
-# plt.xlabel('Predicted')
-# plt.ylabel('True')
-# plt.show()
-# print("Confusion matrix plotted successfully")
-
-# # ROC Curve
-# roc_display = RocCurveDisplay.from_estimator(pipeline, X_val, y_val)
-# roc_display.plot()
-# plt.title('ROC Curve with SMOTE')
-# plt.xlabel('False Positive Rate')
-# plt.ylabel('True Positive Rate')
-# plt.show()
-# print("ROC plotted successfully with SMOTE")
-
-
-# # Predict probabilities for the actual test data with SMOTE
-# print('Making predictions on test data with SMOTE...')
-# test_smote_preds = pipeline.predict_proba(test)[:, 1]
-# print('Predictions made successfully')
-
-# # Create a bar plot for feature importance
-# importance = pipeline['xgbclassifier'].feature_importances_
-# feature_importance = dict(zip(feature_names, importance))
-# sorted_feature_importance = dict(sorted(feature_importance.items(), key=lambda item: item[1]))
-# plt.figure(figsize=(10, 6))
-# plt.barh(range(len(sorted_feature_importance)), list(sorted_feature_importance.values()), color='skyblue')
-# plt.yticks(range(len(sorted_feature_importance)), list(sorted_feature_importance.keys()))
-# plt.xlabel('Importance')
-# plt.ylabel('Features')
-# plt.title('Feature Importance - SMOTE')
-# plt.show()
-# print("Feature importance plotted successfully")
-
-# # Display XGBoost decision tree
-# xgb.plot_tree(pipeline['xgbclassifier'], num_trees=2)
-# plt.title("XGBoost Decision Tree - SMOTE")
-# plt.show()
-
-# # Create a submission dataframe with patient_id and predicted probabilities with SMOTE
-# submission_smote = pd.DataFrame({
-#     'patient_id': test_ids,
-#     'prediction': test_smote_preds
-# })
-
-# # Save the submission dataframe to a csv file without row index with SMOTE
-# submission_smote.to_csv('mysubmission-XGBoost3.5_with_SMOTE(10).csv', index=False)
-# # Save model to file
-# pickle.dump(pipeline, open("XGBoost_model3.5_with_SMOTE(10).pickle", "wb"))
-# print('Model saved successfully')
-
-# logging.info("Submission file created with SMOTE")
