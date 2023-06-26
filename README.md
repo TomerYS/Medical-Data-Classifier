@@ -3,6 +3,8 @@ This repository contains the solution model for the Kaggle competition: TAU Intr
 
 [Kaggle Competition Link](https://www.kaggle.com/competitions/intro2ds-final-assignment-spring-2023/overview)
 
+# score: 0.96772
+
 ## Competition Description:
 
 ### Our Story:
