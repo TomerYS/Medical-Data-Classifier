@@ -4,6 +4,7 @@ This repository contains the solution model for the Kaggle competition: TAU Intr
 [Kaggle Competition Link](https://www.kaggle.com/competitions/intro2ds-final-assignment-spring-2023/overview)
 
 # score: 0.96772
+Best model so far: XGBoost_model(1).pickle
 
 ## Competition Description:
 
@@ -95,7 +96,7 @@ A confusion matrix and ROC curve are plotted to understand the performance of th
 
 ## Submission
 
-Finally, the predicted probabilities for the test set are saved in a CSV file named 'mysubmission-XGBoost3.5_without_SMOTE(12).csv' and the model is saved in a pickle file named 'XGBoost_model3.5_without_SMOTE(12).pickle' for future use.
+Finally, the predicted probabilities for the test set are saved in a CSV file named 'mysubmission-XGBoost(1).csv' and the model is saved in a pickle file named 'XGBoost_model(1).pickle' for future use.
 
 Also, the XGBoost Decision Tree is plotted to understand the decision-making process of the model.
 
