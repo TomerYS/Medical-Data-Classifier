@@ -57,7 +57,11 @@ for df in [train, test]:
 # Calculate BMI where possible
 for df in [train, test]:
     mask = df['bmi'] > 80
-    df.loc[mask,'bmi'] = df.loc[mask,'weight'] / (df.loc[mask,'height']**2)
+    df.loc[mask,'bmi'] = df.loc[mask,'weight'] / (df.loc[mask,'height']/100)**2
+
+for df in [train, test]:
+    mask = df['bmi'] < 10
+    df.loc[mask,'bmi'] = df.loc[mask,'weight'] / (df.loc[mask,'height']/100)**2
 
 
 # If the BMI is still missing after this calculation, we can fill with the median as before
