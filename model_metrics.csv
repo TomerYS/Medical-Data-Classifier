@@ -1,0 +1,2 @@
+Date_Time,Model_Name,Train_AUC,Validation_AUC,Accuracy,Precision,Recall,F1_Score,Log_Loss,MCC,Balanced_Accuracy,Model_Filename,Learning_Rate,N_Estimators,Max_Depth,Min_Child_Weight,Gamma,Subsample,Colsample_Bytree,Reg_Lambda,Reg_Alpha
+20230627_082139,XGBoost,0.9998578200470922,0.9771784579187794,0.9863404846426918,0.9722222222222222,0.717948717948718,0.8259587020648967,0.04682639302866356,0.8292275370343867,0.8584894321174932,Models\XGBoost_model-20230627_082139.pickle,0.008,1500,14,5,0.1,0.8,0.8,1.0,1.0

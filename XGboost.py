@@ -145,7 +145,7 @@ preprocessor = make_column_transformer(
 # Create a pipeline with our preprocessor and XGBoost classifier
 pipeline = make_pipeline(
     preprocessor,
-    XGBClassifier(n_jobs=-1, learning_rate=0.008, n_estimators=1500, max_depth=14, min_child_weight=5, gamma=0.1, subsample=0.8, colsample_bytree=0.8, reg_lambda=1.0, reg_alpha=1.0)
+    XGBClassifier(n_jobs=2, learning_rate=0.008, n_estimators=1500, max_depth=14, min_child_weight=5, gamma=0.1, subsample=0.8, colsample_bytree=0.8, reg_lambda=1.0, reg_alpha=1.0)
 )
 print('Pipeline created successfully')
 
@@ -153,64 +153,150 @@ print('Pipeline created successfully')
 X_train, X_val, y_train, y_val = train_test_split(train, target, test_size=0.2)
 print('Data split successfully')
 
-print('Fitting model...')
-pipeline.fit(X_train, y_train)
-print('Model fitted successfully')
+#for loop to run 10 times
+for i in range(10):
+    print('Fitting model...')
+    pipeline.fit(X_train, y_train)
+    print('Model fitted successfully')
 
-# Predict probabilities for the training and validation set
-print('Making predictions...')
-train_preds = pipeline.predict_proba(X_train)[:, 1]
-val_preds = pipeline.predict_proba(X_val)[:, 1]
-print('Predictions made successfully')
+    # Predict probabilities for the training and validation set
+    print('Making predictions...')
+    train_preds = pipeline.predict_proba(X_train)[:, 1]
+    val_preds = pipeline.predict_proba(X_val)[:, 1]
+    print('Predictions made successfully')
 
-# Calculate the AUC for the training and validation set
-print('Calculating AUC...')
-train_score = roc_auc_score(y_train, train_preds)
-val_score = roc_auc_score(y_val, val_preds)
-print('AUC calculated successfully')
+    # Calculate the AUC for the training and validation set
+    print('Calculating AUC...')
+    train_score = roc_auc_score(y_train, train_preds)
+    val_score = roc_auc_score(y_val, val_preds)
+    print('AUC calculated successfully')
 
-# Print AUC scores
-print(f'Train AUC xgboost: {train_score}')
-print(f'Validation AUC: {val_score}')
+    # Print AUC scores
+    print(f'Train AUC xgboost: {train_score}')
+    print(f'Validation AUC: {val_score}')
 
-# Predict classes for the validation set
-print('Predicting classes...')
-y_val_pred = pipeline.predict(X_val)
-print('Predictions made successfully')
+    # Predict classes for the validation set
+    print('Predicting classes...')
+    y_val_pred = pipeline.predict(X_val)
+    print('Predictions made successfully')
 
-# Log additional metrics without SMOTE
-logging.info('Metrics for XGBoost:')
-logging.info(f'Train AUC: {train_score}')
-logging.info(f'Validation AUC: {val_score}')
-logging.info(f'Accuracy: {accuracy_score(y_val, y_val_pred)}')
-logging.info(f'Precision: {precision_score(y_val, y_val_pred)}')
-logging.info(f'Recall: {recall_score(y_val, y_val_pred)}')
-logging.info(f'F1-Score: {f1_score(y_val, y_val_pred)}')
-logging.info(f'Log-Loss: {log_loss(y_val, val_preds)}')
-logging.info(f'MCC: {matthews_corrcoef(y_val, y_val_pred)}')
-logging.info(f'Balanced Accuracy: {balanced_accuracy_score(y_val, y_val_pred)}')
-logging.info(f'Confusion Matrix: \n {confusion_matrix(y_val, y_val_pred)}')
-print('Metrics logged successfully')
+    # Log additional metrics without SMOTE
+    logging.info('Metrics for XGBoost:')
+    logging.info(f'Train AUC: {train_score}')
+    logging.info(f'Validation AUC: {val_score}')
+    logging.info(f'Accuracy: {accuracy_score(y_val, y_val_pred)}')
+    logging.info(f'Precision: {precision_score(y_val, y_val_pred)}')
+    logging.info(f'Recall: {recall_score(y_val, y_val_pred)}')
+    logging.info(f'F1-Score: {f1_score(y_val, y_val_pred)}')
+    logging.info(f'Log-Loss: {log_loss(y_val, val_preds)}')
+    logging.info(f'MCC: {matthews_corrcoef(y_val, y_val_pred)}')
+    logging.info(f'Balanced Accuracy: {balanced_accuracy_score(y_val, y_val_pred)}')
+    logging.info(f'Confusion Matrix: \n {confusion_matrix(y_val, y_val_pred)}')
+    print('Metrics logged successfully')
 
-feature_names = ['gender', 'HMO', 'height', 'bmi', 'heart_rate', 'steps_day_1', 'steps_day_2', 'steps_day_3', 
-                 'steps_day_4', 'steps_day_5', 'city', 'employment', 'weight', 'test_0', 'test_1', 'test_2', 
-                 'test_3', 'test_4', 'test_5', 'test_6', 'test_7', 'test_8', 'test_9', 'test_10', 'test_11', 
-                 'test_12', 'test_13', 'test_14', 'test_15', 'test_16', 'test_17', 'test_18', 'test_19', 
-                 'steps_day_2_flag', 'test_2_flag', 'test_6_flag', 'test_8_flag', 'test_10_flag', 'test_12_flag', 
-                 'test_15_flag', 'created_year', 'created_month', 'created_day', 'age']
+    feature_names = ['gender', 'HMO', 'height', 'bmi', 'heart_rate', 'steps_day_1', 'steps_day_2', 'steps_day_3', 
+                    'steps_day_4', 'steps_day_5', 'city', 'employment', 'weight', 'test_0', 'test_1', 'test_2', 
+                    'test_3', 'test_4', 'test_5', 'test_6', 'test_7', 'test_8', 'test_9', 'test_10', 'test_11', 
+                    'test_12', 'test_13', 'test_14', 'test_15', 'test_16', 'test_17', 'test_18', 'test_19', 
+                    'steps_day_2_flag', 'test_2_flag', 'test_6_flag', 'test_8_flag', 'test_10_flag', 'test_12_flag', 
+                    'test_15_flag', 'created_year', 'created_month', 'created_day', 'age']
 
-# Predict probabilities for the actual test data
-print('Making predictions on test data...')
-test_preds = pipeline.predict_proba(test)[:, 1]
-print('Predictions made successfully')
+    # Predict probabilities for the actual test data
+    print('Making predictions on test data...')
+    test_preds = pipeline.predict_proba(test)[:, 1]
+    print('Predictions made successfully')
 
-importance = pipeline['xgbclassifier'].feature_importances_
+    importance = pipeline['xgbclassifier'].feature_importances_
 
-# Creating a dictionary to map feature names with their importance
-feature_importance = dict(zip(feature_names, importance))
+    # Creating a dictionary to map feature names with their importance
+    feature_importance = dict(zip(feature_names, importance))
 
-# Sorting the dictionary based on feature importance
-sorted_feature_importance = dict(sorted(feature_importance.items(), key=lambda item: item[1]))
+    # Sorting the dictionary based on feature importance
+    sorted_feature_importance = dict(sorted(feature_importance.items(), key=lambda item: item[1]))
+
+
+    # Create a submission dataframe with patient_id and predicted probabilities
+    submission = pd.DataFrame({
+        'patient_id': test_ids,
+        'prediction': test_preds
+    })
+
+    # Get the current date and time
+    now = datetime.datetime.now()
+    timestamp_str = now.strftime("%Y%m%d_%H%M%S")
+
+    # Specify the directories
+    submission_dir = "Submission Files"
+    model_dir = "Models"
+
+    # Use the timestamp string in the filenames
+    submission_filename = os.path.join(submission_dir, f'mysubmission-XGBoost-{timestamp_str}.csv')
+    model_filename = os.path.join(model_dir, f"XGBoost_model-{timestamp_str}.pickle")
+
+    # Check if directories exist, if not, create them
+    os.makedirs(submission_dir, exist_ok=True)
+    os.makedirs(model_dir, exist_ok=True)
+
+    # Save the submission dataframe to a csv file without row index
+    submission.to_csv(submission_filename, index=False)
+    print(f'Submission saved to {submission_filename}')
+
+    # Save model to file
+    pickle.dump(pipeline, open(model_filename, "wb"))
+    print(f'Model saved to {model_filename}')
+    logging.info(f'Model saved to {model_filename}')
+
+
+    # Get the model parameters
+    model = pipeline.named_steps['xgbclassifier']
+
+    # Define the metrics and parameters you want to log
+    metrics = {
+        'Date_Time': [timestamp_str],
+        'Model_Name': ['XGBoost'],
+        'Train_AUC': [train_score],
+        'Validation_AUC': [val_score],
+        'Accuracy': [accuracy_score(y_val, y_val_pred)],
+        'Precision': [precision_score(y_val, y_val_pred)],
+        'Recall': [recall_score(y_val, y_val_pred)],
+        'F1_Score': [f1_score(y_val, y_val_pred)],
+        'Log_Loss': [log_loss(y_val, val_preds)],
+        'MCC': [matthews_corrcoef(y_val, y_val_pred)],
+        'Balanced_Accuracy': [balanced_accuracy_score(y_val, y_val_pred)],
+        'Model_Filename': [model_filename],
+        'Learning_Rate': [model.learning_rate],
+        'N_Estimators': [model.n_estimators],
+        'Max_Depth': [model.max_depth],
+        'Min_Child_Weight': [model.min_child_weight],
+        'Gamma': [model.gamma],
+        'Subsample': [model.subsample],
+        'Colsample_Bytree': [model.colsample_bytree],
+        'Reg_Lambda': [model.reg_lambda],
+        'Reg_Alpha': [model.reg_alpha]
+    }
+
+    # Convert the dictionary to a DataFrame
+    df_metrics = pd.DataFrame(metrics)
+
+    # Define the path of the metrics file
+    metrics_file = 'model_metrics.csv'
+
+    # Check if the file exists
+    if os.path.isfile(metrics_file):
+        # If it exists, load it and append the new data
+        df_existing = pd.read_csv(metrics_file)
+        df_all = pd.concat([df_existing, df_metrics])
+    else:
+        # If it does not exist, just use the new data
+        df_all = df_metrics
+
+    # Save the DataFrame to a CSV file
+    df_all.to_csv(metrics_file, index=False)
+    print(f'Metrics saved to {metrics_file}')
+    logging.info(f'Metrics saved to {metrics_file}')
+
+
+
 
 # Creating barh plot
 plt.figure(figsize=(30, 30))
@@ -243,40 +329,7 @@ plt.ylabel('True Positive Rate')
 plt.show()
 print("ROC plotted successfully")
 print("finished displaying graphs")
-
-# Create a submission dataframe with patient_id and predicted probabilities
-submission = pd.DataFrame({
-    'patient_id': test_ids,
-    'prediction': test_preds
-})
-
-# Get the current date and time
-now = datetime.datetime.now()
-timestamp_str = now.strftime("%Y%m%d_%H%M%S")
-
-# Specify the directories
-submission_dir = "Submission Files"
-model_dir = "Models"
-
-# Use the timestamp string in the filenames
-submission_filename = os.path.join(submission_dir, f'mysubmission-XGBoost-{timestamp_str}.csv')
-model_filename = os.path.join(model_dir, f"XGBoost_model-{timestamp_str}.pickle")
-
-# Check if directories exist, if not, create them
-os.makedirs(submission_dir, exist_ok=True)
-os.makedirs(model_dir, exist_ok=True)
-
-# Save the submission dataframe to a csv file without row index
-submission.to_csv(submission_filename, index=False)
-print(f'Submission saved to {submission_filename}')
-
-# Save model to file
-pickle.dump(pipeline, open(model_filename, "wb"))
-print(f'Model saved to {model_filename}')
-logging.info(f'Model saved to {model_filename}')
-
 # Plot the first decision tree
 xgb.plot_tree(pipeline['xgbclassifier'], num_trees=2, fmap=model_filename)
 plt.title("XGBoost Decision Tree")
 plt.show()
-
