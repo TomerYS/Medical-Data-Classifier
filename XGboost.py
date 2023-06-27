@@ -145,7 +145,8 @@ preprocessor = make_column_transformer(
 # Create a pipeline with our preprocessor and XGBoost classifier
 pipeline = make_pipeline(
     preprocessor,
-    XGBClassifier(n_jobs=2, learning_rate=0.008, n_estimators=1500, max_depth=14, min_child_weight=5, gamma=0.1, subsample=0.8, colsample_bytree=0.8, reg_lambda=1.0, reg_alpha=1.0)
+    XGBClassifier(n_jobs=-1, learning_rate=0.008, n_estimators=1500, max_depth=14, min_child_weight=5, gamma=0.1, subsample=0.8, colsample_bytree=0.8, reg_lambda=1.0, reg_alpha=1.0)
+    #XGBClassifier(n_jobs=-1)
 )
 print('Pipeline created successfully')
 
@@ -249,8 +250,10 @@ for i in range(10):
 
     # Get the model parameters
     model = pipeline.named_steps['xgbclassifier']
+    cm = confusion_matrix(y_val, y_val_pred)
 
     # Define the metrics and parameters you want to log
+
     metrics = {
         'Date_Time': [timestamp_str],
         'Model_Name': ['XGBoost'],
@@ -263,6 +266,10 @@ for i in range(10):
         'Log_Loss': [log_loss(y_val, val_preds)],
         'MCC': [matthews_corrcoef(y_val, y_val_pred)],
         'Balanced_Accuracy': [balanced_accuracy_score(y_val, y_val_pred)],
+        'Confusion_Matrix_TP': [cm[1, 1]],  # True positive
+        'Confusion_Matrix_FP': [cm[0, 1]],  # False positive
+        'Confusion_Matrix_FN': [cm[1, 0]],  # False negative
+        'Confusion_Matrix_TN': [cm[0, 0]],  # True negative
         'Model_Filename': [model_filename],
         'Learning_Rate': [model.learning_rate],
         'N_Estimators': [model.n_estimators],
@@ -274,6 +281,7 @@ for i in range(10):
         'Reg_Lambda': [model.reg_lambda],
         'Reg_Alpha': [model.reg_alpha]
     }
+
 
     # Convert the dictionary to a DataFrame
     df_metrics = pd.DataFrame(metrics)
@@ -310,7 +318,6 @@ print("Feature importance plotted successfully")
 
 
 # calculate the confusion matrix
-cm = confusion_matrix(y_val, y_val_pred)
 disp = ConfusionMatrixDisplay(confusion_matrix=cm)
 disp.plot()
 plt.xlabel('Predicted')
