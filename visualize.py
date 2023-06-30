@@ -24,6 +24,10 @@ def visualize(model_pipeline, validation_features, validation_labels, validation
     # Increase default size of the figure and font size
     plt.rcParams.update({'font.size': 11})
 
+    # Histograms for each numeric feature
+    data_df.hist(figsize=(10, 10), bins=50, xlabelsize=8, ylabelsize=8, color='skyblue', edgecolor='black')
+    plt.show()
+
     # Plot the first decision tree
     plt.close()  # Close any existing figures
     plot_tree(model, rankdir='LR')
