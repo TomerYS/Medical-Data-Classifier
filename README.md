@@ -7,73 +7,53 @@ As for now the main script is not organized and will be splited into different f
 # score: 0.96772
 Best model so far: XGBoost_model(1).pickle
 
-## Competition Description:
+## Project Structure
+The code has been organized into multiple files for better modularity and readability. Here's a brief description of each file:
 
-### Our Story:
-Within the realm of medical marvels, a dataset of immense potential has surfaced, harboring the secrets to personalized healthcare. This extraordinary collection captures the personal information and results of 20 medical tests conducted on a diverse group of patients from the illustrious nation of Israel.
+- `data_loading.py`: Contains functions to load the datasets.
+- `preprocessing.py`: Includes data preprocessing steps such as handling missing values, feature engineering, and encoding categorical variables.
+- `model.py`: Defines the model training and evaluation pipeline.
+- `visualize.py`: Provides functions for visualizing model performance, feature importance, and data distributions.
+- `submission.py`: Handles predictions and saves the submission file.
+- `main.py`: The main script that orchestrates the entire process.
 
-### The Mission:
-As aspiring data scientists, your mission is to navigate this dataset and embark on a crucial classification task: to discern the patients' risk of developing a specific medical condition known as Harmony Syndrome. This syndrome, shrouded in mystery, manifests as an imbalance in the body's intricate systems, affecting individuals in different ways.
+## Usage
+To run the solution model, follow these steps:
 
-### The Goal:
-Your goal is to classify the patients into two categories: 'At Risk' and 'Healthy'. By analyzing the patterns hidden within the personal information and test results, you will unlock the keys to early detection and intervention, offering hope for individuals susceptible to Harmony Syndrome.
-You will need to create a predictive model capable of identifying those at a higher risk of developing the syndrome, enabling targeted preventive measures and timely medical interventions.
+1. Ensure that you have the necessary dependencies installed. You can find them listed in the `requirements.txt` file.
+2. Place the competition datasets (`personal_info_train.csv`, `personal_info_test.csv`, `measurements_results_train.csv`, `measurements_results_test.csv`) in the same directory as the code files.
+3. Run the `main.py` script.
 
-### Why?
-By framing the task as identifying the risk of Harmony Syndrome, you will engage with the medical world and its challenges. This task highlights the importance of early detection and intervention, and the potential impact classification efforts can have on improving healthcare outcomes.
-The task also emphasizes the value of personalized medicine and the need to uncover patterns and correlations within the dataset to drive advancements in medical research and patient care.
+## Steps Performed in the Solution Model
 
-## Instructions:
+1. **Data Loading**: The datasets are loaded using the `load_datasets()` function from `data_loading.py`.
+2. **Data Preprocessing**: The loaded datasets are preprocessed using the `preprocess_data()` function from `preprocessing.py`. This step includes handling missing values, feature engineering, and encoding categorical variables.
+3. **Model Training and Evaluation**: The preprocessed data is used to train and evaluate the model using the `train_and_evaluate()` function from `model.py`. The model pipeline includes a column transformer for one-hot encoding categorical features and an XGBoost classifier.
+4. **Model Visualization**: The model's performance and interpretability are visualized using the `visualize()` function from `visualize.py`. The function plots the confusion matrix, ROC curve, feature importance, and other relevant visualizations.
+5. **Prediction and Submission**: The model is used to predict the test set probabilities, and the predictions are saved to a submission file using the `predict_and_save_results()` function from `submission.py`. The submission file is named `mysubmission-XGBoost(1).csv`.
+6. **Model Persistence**: The trained model is saved in a pickle file named `XGBoost_model(1).pickle` for future use.
 
-### Objective:
-Your primary goal is to maximize the AUC metric of your trained model.
+Feel free to explore the individual files to understand the implementation details and customize the code as per your requirements.
 
-### Data:
-- **Training Data**: You will be provided with a training dataset to train your model.
-- **Test Data**: The test dataset will have the last column (label) removed and replaced with zeros. Your task is to submit predictions for these records.
+For any questions or clarifications, please refer to the competition's Kaggle page or reach out via the Moodle platform.
+# The Model
 
-### Submission Format:
-Prepare a submission file with two columns. The first column should contain the ID of each record, and the second column should contain the corresponding prediction (real value).
-
-### Scoring:
-During the competition, you will receive feedback on the performance of your model based on the provided test data. Your AUC score will be calculated on 50% of the test data. The remaining 50% of the test data will only be revealed once the submission date is over, and the score on this portion will be used for grading.
-
-### Submission Limit:
-You are allowed to make a maximum of 5 submissions per day. Use your submissions wisely to refine and improve your model.
-
-### Individual Work:
-This project should be completed individually. Collaboration or sharing of code is not allowed.
-
-### Questions:
-If you have any questions or need clarifications, please utilize the Moodle platform to ask your queries.
-
-### Moodle:
-Upload your most recent code file (.ipynb notebook or .py file) to the Moodle under the "HW 4" section.
-
-Best of luck with your submission, and remember to make the most of your limited submissions!
-
-# The Model:
-
-## XGBoost-based Healthcare Model
-
-The provided Python code is a model built using the XGBoost algorithm, a popular gradient boosting machine learning library. This script uses healthcare data (such as personal and health measurements) of individuals for training and testing.
+The solution model is based on the XGBoost algorithm, a popular gradient boosting machine learning library. This script uses healthcare data, including personal and health measurements, to train and test the model.
 
 ## Data Ingestion
 
-The data comes from two separate datasets: `personal_info_train.csv` (and test counterpart) and `measurements_results_train.csv` (and test counterpart), which are merged into single datasets for both training and testing based on the 'patient_id'.
-
-The personal information dataset is expected to contain demographic and other personal details about the patients. The measurements dataset holds the results of various tests and measurements taken from the patient.
+The data is loaded using the `load_datasets()` function from `data_loading.py`. It comes from two separate datasets: `personal_info_train.csv` (and its test counterpart) and `measurements_results_train.csv` (and its test counterpart). These datasets are merged based on the 'patient_id' column to create unified datasets for both training and testing. The personal information dataset contains demographic and personal details of the patients, while the measurements dataset holds the results of various tests and measurements.
 
 ## Data Preprocessing
 
-This script includes extensive data preprocessing steps:
+Extensive data preprocessing is performed using the `preprocess_data()` function from `preprocessing.py` to prepare the datasets for modeling. The following steps are carried out:
 
-1. It checks and removes any duplicate records based on 'patient_id'.
-2. The 'gender' categorical feature is converted to a binary numeric representation using a simple map (e.g., Male: 0, Female: 1).
-3. Outliers in the 'height' and 'weight' fields are handled and the Body Mass Index (BMI) is calculated. The missing BMIs are imputed using median Imputer.
-4. Missing values in certain columns are handled by creating a new '_flag' column to indicate missingness and imputing missing values with median values.
+1. Duplicate records based on 'patient_id' are checked and removed.
+2. The 'gender' categorical feature is converted into a binary numeric representation using a mapping (e.g., Male: 0, Female: 1).
+3. Outliers in the 'height' and 'weight' fields are handled, and the Body Mass Index (BMI) is calculated. Missing BMIs are imputed using median imputation.
+4. Missing values in specific columns are handled by creating a new '_flag' column to indicate missingness and imputing the missing values with medians.
 5. The 'country' and 'region' columns are dropped. Other categorical columns with missing values are filled with 'NaN' or 'Missing'.
-6. Date fields 'created_at' and 'birth_date' are converted to the datetime format, and new features ('created_year', 'created_month', 'created_day', and 'age') are extracted from these. After feature extraction, the original date fields are dropped.
+6. Date fields 'created_at' and 'birth_date' are converted to the datetime format, and new features ('created_year', 'created_month', 'created_day', and 'age') are extracted. The original date fields are then dropped.
 7. The 'label' field (the target variable) and 'patient_id' field are separated from the training data.
 8. Categorical features are encoded using LabelEncoder.
 
@@ -81,24 +61,20 @@ The preprocessed datasets are saved to 'final_procc.csv' for further use.
 
 ## Model Pipeline
 
-The script constructs a pipeline consisting of a column transformer (for one-hot encoding of categorical features) and an XGBoost classifier. The training data is split into a training and a validation set.
+The solution model employs a pipeline defined in `model.py` that consists of a column transformer for one-hot encoding categorical features and an XGBoost classifier. The training data is split into a training set and a validation set.
 
 ## Model Training and Evaluation
 
-The model is trained using the training set and then used to predict probabilities for the training set, validation set, and test set. It calculates the ROC AUC score for both the training set and validation set. Additionally, it logs several other metrics like accuracy, precision, recall, F1-score, log loss, MCC, balanced accuracy, and confusion matrix for the validation set predictions.
+The model is trained and evaluated using the `train_and_evaluate()` function from `model.py`. The function returns the trained model pipeline (`model_pipeline`) along with the training and validation ROC AUC scores, validation features, labels, and predictions.
 
-## Feature Importance
+## Model Visualization
 
-A bar plot is created to visualize the feature importances derived from the model, helping us understand which features have the most influence on the model's predictions.
+The `visualize()` function from `visualize.py` is used to generate visualizations of the model's performance. This function plots the confusion matrix, ROC curve, feature importance, and other relevant visualizations based on the trained model pipeline (`model_pipeline`), validation features, labels, and predictions.
 
-## Model Interpretation
+## Prediction and Submission
 
-A confusion matrix and ROC curve are plotted to understand the performance of the model visually.
+The `predict_and_save_results()` function from `submission.py` is utilized to make predictions on the test data using the trained model pipeline (`model_pipeline`). The function saves the predicted probabilities, training and validation ROC AUC scores, and the test data along with the corresponding IDs to a submission file (`mysubmission-XGBoost(1).csv`).
 
-## Submission
+The trained model is also saved in a pickle file named `XGBoost_model(1).pickle` for future use.
 
-Finally, the predicted probabilities for the test set are saved in a CSV file named 'mysubmission-XGBoost(1).csv' and the model is saved in a pickle file named 'XGBoost_model(1).pickle' for future use.
-
-Also, the XGBoost Decision Tree is plotted to understand the decision-making process of the model.
-
-The script uses logging to keep track of various steps and metrics throughout the process.
+The script uses logging to track various steps and metrics throughout the process.
