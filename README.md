@@ -1,5 +1,6 @@
 # TAUIntro2DS_SolutionModel
 This repository contains the solution model for the Kaggle competition: TAU Intro2DS - Final Assignment - Spring 2023.
+As for now the main script is not organized and will be splited into different files.
 
 [Kaggle Competition Link](https://www.kaggle.com/competitions/intro2ds-final-assignment-spring-2023/overview)
 
