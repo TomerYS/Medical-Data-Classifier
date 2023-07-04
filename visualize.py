@@ -21,9 +21,6 @@ def visualize(model_pipeline, validation_features, validation_labels, validation
     plt.title('Confusion Matrix')
     plt.show()
 
-    # Increase default size of the figure and font size
-    plt.rcParams.update({'font.size': 11})
-
     # Histograms for each numeric feature
     data_df.hist(figsize=(10, 10), bins=50, xlabelsize=8, ylabelsize=8, color='skyblue', edgecolor='black')
     plt.show()
@@ -53,12 +50,3 @@ def visualize(model_pipeline, validation_features, validation_labels, validation
     plt.title('Feature Importance')
     plt.show()
     print("Feature importance plotted successfully")
-
-    # Scaling features
-    scaler = StandardScaler()
-    scaled_features = scaler.fit_transform(data_df.select_dtypes(include=np.number))
-
-    # Skewness and kurtosis
-    numerical_cols = data_df.select_dtypes(include=np.number).columns
-    for col in numerical_cols:
-        print(f'Feature {col} - Skewness: {skew(data_df[col])}, Kurtosis: {kurtosis(data_df[col])}')
